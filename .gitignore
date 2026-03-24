@@ -1,0 +1,12 @@
+# Ignore all image files
+*.png
+*.jpg
+*.jpeg
+
+# Ignore dataset completely (recommended)
+dataset/
+
+# But keep folder structure
+!dataset/
+!dataset/*/
+!dataset/**/.gitkeep
