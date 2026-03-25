@@ -1,12 +1,94 @@
-# Ignore all image files
+# =========================
+# 🧠 PYTHON
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc.*
+*.so
+
+# =========================
+# 🧪 VIRTUAL ENV
+# =========================
+venv/
+venv310/
+.env/
+.envrc/
+
+# =========================
+# 📦 DATASETS (VERY IMPORTANT)
+# =========================
+Dataset/
+
+
+# =========================
+# 📊 GENERATED FILES
+# =========================
+*.csv
+*.xlsx
+*.json
+*.pkl
+
+# =========================
+# 🧠 MODEL CHECKPOINTS
+# =========================
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+
+# =========================
+# 📈 LOGS & OUTPUTS
+# =========================
+logs/
+runs/
+outputs/
+*.log
+
+# =========================
+# 🖼️ IMAGES (GENERATED)
+# =========================
+outputs/images/
 *.png
 *.jpg
 *.jpeg
 
-# Ignore dataset completely (recommended)
-dataset/
+# =========================
+# ⚙️ IDE / EDITOR
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# But keep folder structure
-!dataset/
-!dataset/*/
-!dataset/**/.gitkeep
+# =========================
+# 🧪 JUPYTER
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# 🧾 OS FILES
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# 🔐 SECRETS / CONFIG
+# =========================
+.env
+*.env
+
+# =========================
+# ⚡ TEMP FILES
+# =========================
+tmp/
+temp/
+*.tmp
+
+# =========================
+# 🧠 FUTURE SAFE (ML EXPERIMENTS)
+# =========================
+wandb/
+mlruns/
+tensorboard/
