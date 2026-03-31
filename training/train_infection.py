@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from datasets.lung_dataset import LungDataset
+from datasets.lung_dataset import InfectionDataset
 from models.unet import UNet
 from config.config import *
 
@@ -137,9 +137,6 @@ def train_one_epoch(loader):
 
     return total_loss / len(loader)
 
-# ========================
-# VALIDATION FUNCTION (ENHANCED 🔥)
-# ========================
 
 def validate(loader):
     model.eval()
@@ -185,7 +182,7 @@ def validate(loader):
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 os.makedirs("logs", exist_ok=True)
 
-log_file = "logs/lung_training_log.csv"
+log_file = "logs/infection_training_log.csv"
 
 with open(log_file, "w", newline="") as f:
     writer = csv.writer(f)
@@ -227,8 +224,8 @@ for epoch in range(EPOCHS):
     if val_loss < best_val:
         best_val = val_loss
         counter = 0
-        torch.save(model.state_dict(), os.path.join(CHECKPOINT_DIR, "lung_model.pth"))
-        print("✅ Lung model saved!")
+        torch.save(model.state_dict(), os.path.join(CHECKPOINT_DIR, "infection_model.pth"))
+        print("✅ Infection model saved!")
     else:
         counter += 1
 
@@ -271,9 +268,9 @@ plt.plot(precision_list, label="Precision")
 plt.plot(recall_list, label="Recall")
 
 plt.legend()
-plt.title("Lung Model Metrics")
+plt.title("Infection Model Metrics")
 
-plt.savefig("logs/lung_metrics.png")
+plt.savefig("logs/infection_metrics.png")
 plt.show()
 
-print("\n🎉 Lung training complete!")
+print("\n🎉 Infection training complete!")
