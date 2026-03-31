@@ -3,7 +3,7 @@ import pandas as pd
 import cv2
 import numpy as np
 
-DATASET_PATH = r"D:\Re-creation\Dataset"  # 🔥 CHANGE THIS EXACTLY
+from config.config import DATASET_PATH   # ✅ USE CONFIG
 
 IMG_EXT = (".png", ".jpg", ".jpeg", ".bmp")
 
@@ -15,8 +15,7 @@ def count_files(path):
 
 
 def count_non_empty_masks(path):
-    total = 0
-    non_empty = 0
+    total, non_empty = 0, 0
 
     if not os.path.exists(path):
         return 0, 0
@@ -61,7 +60,6 @@ def analyze():
 
                 images = count_files(img_path)
                 lung_masks = count_files(lung_path)
-
                 inf_total, inf_valid = count_non_empty_masks(inf_path)
 
                 records.append({
@@ -81,20 +79,18 @@ def analyze():
         print("❌ No data found. Check DATASET_PATH")
         return
 
-    print("\n📊 FULL DATA:\n")
-    print(df)
+    print("\n📊 FULL DATA:\n", df)
 
-    print("\n📈 SUMMARY:\n")
     summary = df.groupby(["Dataset", "Class"])[
         ["Images", "Lung Masks", "Inf Masks Valid"]
     ].sum()
 
-    print(summary)
+    print("\n📈 SUMMARY:\n", summary)
 
     df.to_csv("dataset_full.csv", index=False)
     summary.to_csv("dataset_summary.csv")
 
-    print("\n✅ Saved dataset_full.csv and dataset_summary.csv")
+    print("\n✅ CSVs saved successfully")
 
 
 if __name__ == "__main__":
