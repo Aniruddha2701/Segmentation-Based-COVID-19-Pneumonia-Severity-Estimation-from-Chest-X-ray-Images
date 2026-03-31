@@ -9,12 +9,14 @@
 import torch
 import torch.nn as nn
 
-print("🔥 UNet script started")
 
-# 🔹 Basic block: Conv → BN → ReLU (x2)
+# ========================
+# DOUBLE CONV BLOCK
+# ========================
+
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super(DoubleConv, self).__init__()
+        super().__init__()
 
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, 3, padding=1),
@@ -30,12 +32,15 @@ class DoubleConv(nn.Module):
         return self.conv(x)
 
 
-# 🔹 U-Net Architecture
+# ========================
+# U-NET MODEL
+# ========================
+
 class UNet(nn.Module):
     def __init__(self, in_channels=1, out_channels=1):
-        super(UNet, self).__init__()
+        super().__init__()
 
-        # Encoder (Downsampling)
+        # Encoder
         self.enc1 = DoubleConv(in_channels, 64)
         self.enc2 = DoubleConv(64, 128)
         self.enc3 = DoubleConv(128, 256)
@@ -46,20 +51,20 @@ class UNet(nn.Module):
         # Bottleneck
         self.bottleneck = DoubleConv(512, 1024)
 
-        # Decoder (Upsampling)
-        self.up4 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
+        # Decoder
+        self.up4 = nn.ConvTranspose2d(1024, 512, 2, 2)
         self.dec4 = DoubleConv(1024, 512)
 
-        self.up3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
+        self.up3 = nn.ConvTranspose2d(512, 256, 2, 2)
         self.dec3 = DoubleConv(512, 256)
 
-        self.up2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
+        self.up2 = nn.ConvTranspose2d(256, 128, 2, 2)
         self.dec2 = DoubleConv(256, 128)
 
-        self.up1 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
+        self.up1 = nn.ConvTranspose2d(128, 64, 2, 2)
         self.dec1 = DoubleConv(128, 64)
 
-        # Output layer
+        # Output (NO SIGMOID HERE)
         self.out = nn.Conv2d(64, out_channels, kernel_size=1)
 
     def forward(self, x):
@@ -72,7 +77,7 @@ class UNet(nn.Module):
         # Bottleneck
         b = self.bottleneck(self.pool(e4))
 
-        # Decoder + skip connections
+        # Decoder
         d4 = self.up4(b)
         d4 = torch.cat((d4, e4), dim=1)
         d4 = self.dec4(d4)
@@ -89,16 +94,4 @@ class UNet(nn.Module):
         d1 = torch.cat((d1, e1), dim=1)
         d1 = self.dec1(d1)
 
-        return torch.sigmoid(self.out(d1))
-
-
-# 🔍 TEST BLOCK
-if __name__ == "__main__":
-    print("🔥 UNet test running")
-    model = UNet()
-
-    x = torch.randn(1, 1, 256, 256)
-    y = model(x)
-
-    print("Input shape:", x.shape)
-    print("Output shape:", y.shape)
+        return self.out(d1)  # 🔥 RAW LOGITS
