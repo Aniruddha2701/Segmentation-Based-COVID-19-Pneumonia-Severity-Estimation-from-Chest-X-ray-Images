@@ -1,0 +1,214 @@
+Alright, let’s turn your project into a **smooth-running pipeline orchestra** 🎼⚙️
+I’ll give you the **exact command sequence**, plus a **clean workflow** so nothing breaks mid-run.
+
+---
+
+# 🧠 🔁 FULL EXECUTION FLOW (CORRECT ORDER)
+
+You **don’t run everything randomly**. Follow this order:
+
+```text
+1. Dataset Check
+2. Train Lung Model
+3. Train Infection Model
+4. Evaluate Models
+5. Ablation Study
+6. Comparison Graph
+7. Run Pipeline (test image)
+8. Run Streamlit UI
+```
+
+---
+
+# 🚀 🧾 COMMANDS (STEP BY STEP)
+
+👉 Run all commands from your project root (`Re-creation/`)
+
+---
+
+## 🔍 1. Dataset Analysis (Sanity Check)
+
+```bash
+python -m dataset_analyzer.analyze_dataset
+```
+
+👉 Confirms:
+
+* paths correct
+* masks exist
+* dataset integrity
+
+---
+
+## 🫁 2. Train Lung Model
+
+```bash
+python -m training.train_lung
+```
+
+✔ Output:
+
+* `checkpoints/lung_model.pth`
+* `logs/lung_training_log.csv`
+* `logs/lung_metrics.png`
+
+---
+
+## 🦠 3. Train Infection Model
+
+```bash
+python -m training.train_infection
+```
+
+✔ Output:
+
+* `checkpoints/infection_model.pth`
+* `logs/infection_training_log.csv`
+* `logs/infection_metrics.png`
+
+---
+
+## 📊 4. Evaluate Lung Model
+
+```bash
+python -m evaluation.evaluate
+```
+
+✔ Output:
+
+* Dice score printed
+
+---
+
+## 🧪 5. Ablation Study
+
+```bash
+python -m evaluation.ablation
+```
+
+✔ Output:
+
+* Segmentation vs severity comparison
+
+---
+
+## 🆚 6. Comparison Graph (VERY IMPORTANT)
+
+```bash
+python -m evaluation.compare_models
+```
+
+✔ Output:
+
+```text
+logs/comparison_dice.png
+logs/comparison_iou.png
+```
+
+---
+
+## 🧠 7. Run Full Pipeline (Single Image)
+
+```bash
+python -m pipeline.run_pipeline
+```
+
+✔ Output:
+
+* segmentation overlay
+* Grad-CAM
+* severity
+
+---
+
+## 🌐 8. Run Streamlit App
+
+```bash
+streamlit run app/app.py
+```
+
+👉 Opens browser UI
+
+---
+
+# ⚠️ IMPORTANT NOTES (DON’T SKIP)
+
+## 🧩 1. GPU check (optional)
+
+```bash
+nvidia-smi
+```
+
+---
+
+## 🧩 2. If module error occurs
+
+Run from root folder:
+
+```bash
+cd Re-creation
+```
+
+---
+
+## 🧩 3. Windows vs Linux path
+
+Your config already supports both (we fixed earlier ✔)
+
+---
+
+# 🧠 QUICK VERSION (ALL COMMANDS)
+
+```bash
+python -m dataset_analyzer.analyze_dataset
+python -m training.train_lung
+python -m training.train_infection
+python -m evaluation.evaluate
+python -m evaluation.ablation
+python -m evaluation.compare_models
+python -m pipeline.run_pipeline
+streamlit run app/app.py
+```
+
+---
+
+# 🎯 WHAT HAPPENS AFTER FULL RUN
+
+You’ll have:
+
+```text
+checkpoints/
+├── lung_model.pth
+├── infection_model.pth
+
+logs/
+├── lung_training_log.csv
+├── infection_training_log.csv
+├── lung_metrics.png
+├── infection_metrics.png
+├── comparison_dice.png
+├── comparison_iou.png
+```
+
+---
+
+# 🧠 FINAL ANALOGY
+
+This sequence is like:
+
+* Train → Teach model
+* Evaluate → Test knowledge
+* Compare → Rank performance
+* Pipeline → Use knowledge
+* UI → Show results
+
+---
+
+# 🚀 IF YOU WANT NEXT
+
+I can:
+
+* create a **single bash script (.sh / .bat)** to run everything
+* or build a **one-click pipeline launcher**
+
+Just say 😄

@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from datasets.lung_dataset import InfectionDataset
+from datasets.infection_dataset import InfectionDataset
 from models.unet import UNet
 from config.config import *
 
 # ========================
-# LOSS (UNCHANGED ✅)
+# LOSS
 # ========================
 
 class DiceLoss(nn.Module):
@@ -34,13 +34,12 @@ class DiceLoss(nn.Module):
 bce_loss = nn.BCEWithLogitsLoss()
 dice_loss = DiceLoss()
 
-
 def combined_loss(preds, targets):
-    return bce_loss(preds, targets) + dice_loss(preds, targets)
+    return bce_loss(preds, targets) + 2 * dice_loss(preds, targets)
 
 
 # ========================
-# METRICS (UNCHANGED ✅)
+# METRICS
 # ========================
 
 def dice_score(preds, targets):
@@ -74,27 +73,28 @@ def precision_recall(preds, targets):
 
 
 # ========================
-# DATA (UNCHANGED + OPTIMIZED ✅)
+# DATA (STABLE VERSION)
 # ========================
 
 train_loader = DataLoader(
-    LungDataset(DATASET_PATH, split="train"),
-    batch_size=BATCH_SIZE,
+    InfectionDataset(DATASET_PATH, split="train"),
+    batch_size=2,  # 🔥 safer for GPU
     shuffle=True,
     num_workers=2 if DEVICE.type == "cuda" else 0,
     pin_memory=True if DEVICE.type == "cuda" else False
 )
 
 val_loader = DataLoader(
-    LungDataset(DATASET_PATH, split="val"),
-    batch_size=BATCH_SIZE,
+    InfectionDataset(DATASET_PATH, split="val"),
+    batch_size=2,
     shuffle=False,
     num_workers=2 if DEVICE.type == "cuda" else 0,
     pin_memory=True if DEVICE.type == "cuda" else False
 )
 
+
 # ========================
-# MODEL (UNCHANGED ✅)
+# MODEL
 # ========================
 
 model = UNet().to(DEVICE)
@@ -105,17 +105,32 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
 )
 
 # ========================
-# TRACKING (NEW 🔥)
+# RESUME (SAFE)
+# ========================
+
+checkpoint_path = os.path.join(CHECKPOINT_DIR, "infection_model.pth")
+
+if os.path.exists(checkpoint_path):
+    try:
+        model.load_state_dict(torch.load(checkpoint_path, map_location=DEVICE))
+        print("✅ Loaded existing infection model checkpoint")
+    except Exception as e:
+        print(f"⚠️ Failed to load checkpoint: {e}")
+        print("Training from scratch...")
+
+# ========================
+# TRACKING
 # ========================
 
 train_losses, val_losses = [], []
 dice_list, iou_list = [], []
 precision_list, recall_list = [], []
 
-plt.ion()  # live plotting
+plt.ion()
+
 
 # ========================
-# TRAIN FUNCTIONS (UNCHANGED ✅)
+# TRAIN
 # ========================
 
 def train_one_epoch(loader):
@@ -141,11 +156,8 @@ def train_one_epoch(loader):
 def validate(loader):
     model.eval()
 
-    total_loss = 0
-    total_dice = 0
-    total_iou = 0
-    total_precision = 0
-    total_recall = 0
+    total_loss = total_dice = total_iou = 0
+    total_precision = total_recall = 0
 
     with torch.no_grad():
         for imgs, masks in loader:
@@ -153,7 +165,6 @@ def validate(loader):
             masks = masks.to(DEVICE)
 
             preds = model(imgs)
-
             loss = combined_loss(preds, masks)
 
             total_loss += loss.item()
@@ -176,7 +187,7 @@ def validate(loader):
 
 
 # ========================
-# TRAIN LOOP (ENHANCED 🔥)
+# TRAIN LOOP
 # ========================
 
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
@@ -207,7 +218,6 @@ for epoch in range(EPOCHS):
     print(f"Precision:  {precision:.4f}")
     print(f"Recall:     {recall:.4f}")
 
-    # STORE
     train_losses.append(train_loss)
     val_losses.append(val_loss)
     dice_list.append(dice)
@@ -215,16 +225,14 @@ for epoch in range(EPOCHS):
     precision_list.append(precision)
     recall_list.append(recall)
 
-    # CSV SAVE (UNCHANGED)
     with open(log_file, "a", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([epoch+1, train_loss, val_loss, dice, iou, precision, recall])
 
-    # SAVE MODEL
     if val_loss < best_val:
         best_val = val_loss
         counter = 0
-        torch.save(model.state_dict(), os.path.join(CHECKPOINT_DIR, "infection_model.pth"))
+        torch.save(model.state_dict(), checkpoint_path)
         print("✅ Infection model saved!")
     else:
         counter += 1
@@ -233,44 +241,14 @@ for epoch in range(EPOCHS):
         print("⛔ Early stopping triggered")
         break
 
-    # 🔥 LIVE PLOT
+    # LIVE PLOT
     plt.clf()
-
-    plt.subplot(2, 2, 1)
-    plt.plot(train_losses, label="Train")
-    plt.plot(val_losses, label="Val")
-    plt.title("Loss")
-    plt.legend()
-
-    plt.subplot(2, 2, 2)
-    plt.plot(dice_list, label="Dice")
-    plt.plot(iou_list, label="IoU")
-    plt.legend()
-
-    plt.subplot(2, 2, 3)
-    plt.plot(precision_list, label="Precision")
-    plt.plot(recall_list, label="Recall")
-    plt.legend()
-
+    plt.subplot(2,2,1); plt.plot(train_losses); plt.plot(val_losses); plt.title("Loss")
+    plt.subplot(2,2,2); plt.plot(dice_list); plt.plot(iou_list); plt.title("Dice/IoU")
+    plt.subplot(2,2,3); plt.plot(precision_list); plt.plot(recall_list); plt.title("Prec/Rec")
     plt.pause(0.1)
 
-# ========================
-# FINAL SAVE PLOTS 🔥
-# ========================
-
+# FINAL PLOT
 plt.ioff()
-
-plt.figure(figsize=(10, 5))
-
-plt.plot(dice_list, label="Dice")
-plt.plot(iou_list, label="IoU")
-plt.plot(precision_list, label="Precision")
-plt.plot(recall_list, label="Recall")
-
-plt.legend()
-plt.title("Infection Model Metrics")
-
 plt.savefig("logs/infection_metrics.png")
-plt.show()
-
 print("\n🎉 Infection training complete!")
