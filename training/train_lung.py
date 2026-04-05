@@ -110,10 +110,18 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
 
 checkpoint_path = os.path.join(CHECKPOINT_DIR, "lung_model.pth")
 
+start_epoch = 0
+
 if os.path.exists(checkpoint_path):
     try:
-        model.load_state_dict(torch.load(checkpoint_path, map_location=DEVICE))
-        print("✅ Loaded existing lung model checkpoint")
+        checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+        
+        model.load_state_dict(checkpoint["model"])
+        optimizer.load_state_dict(checkpoint["optimizer"])
+        start_epoch = checkpoint["epoch"] + 1
+
+        print(f"✅ Resuming training from epoch {start_epoch}")
+
     except Exception as e:
         print(f"⚠️ Failed to load checkpoint: {e}")
         print("Training from scratch...")
@@ -194,16 +202,17 @@ os.makedirs("logs", exist_ok=True)
 
 log_file = "logs/lung_training_log.csv"
 
-with open(log_file, "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Epoch", "TrainLoss", "ValLoss", "Dice", "IoU", "Precision", "Recall"])
+if not os.path.exists(log_file):
+    with open(log_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Epoch", "TrainLoss", "ValLoss", "Dice", "IoU", "Precision", "Recall"])
 
 best_val = float("inf")
 patience = 5
 counter = 0
 
-for epoch in range(EPOCHS):
-    print(f"\nEpoch {epoch+1}/{EPOCHS}")
+for epoch in range(start_epoch, EPOCHS):
+    print(f"\nEpoch {epoch+1}/{EPOCHS} (Resume from {start_epoch+1})")
 
     train_loss = train_one_epoch(train_loader)
     val_loss, dice, iou, precision, recall = validate(val_loader)
@@ -231,7 +240,7 @@ for epoch in range(EPOCHS):
     if val_loss < best_val:
         best_val = val_loss
         counter = 0
-        torch.save(model.state_dict(), checkpoint_path)
+        torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(), "epoch": epoch}, checkpoint_path)
         print("✅ Lung model saved!")
     else:
         counter += 1
