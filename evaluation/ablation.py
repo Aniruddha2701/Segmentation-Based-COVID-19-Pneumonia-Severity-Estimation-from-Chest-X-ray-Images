@@ -3,16 +3,30 @@ from tqdm import tqdm
 
 from models.unet import UNet
 from datasets.infection_dataset import InfectionDataset
-from datasets.lung_dataset import LungDataset
 from utils.severity import compute_severity
 from config.config import *
 
 
+# ========================
+# SAFE LOAD FUNCTION 🔥
+# ========================
+
+def load_model(model, path):
+    checkpoint = torch.load(path, map_location=DEVICE)
+
+    if isinstance(checkpoint, dict) and "model" in checkpoint:
+        model.load_state_dict(checkpoint["model"])
+    else:
+        model.load_state_dict(checkpoint)
+
+
+# ========================
+# WITHOUT SEVERITY
+# ========================
+
 def evaluate_without_severity():
     model = UNet().to(DEVICE)
-    model.load_state_dict(
-        torch.load(f"{CHECKPOINT_DIR}/infection_model.pth", map_location=DEVICE)
-    )
+    load_model(model, f"{CHECKPOINT_DIR}/infection_model.pth")
     model.eval()
 
     dataset = InfectionDataset(DATASET_PATH, split="test")
@@ -37,12 +51,16 @@ def evaluate_without_severity():
     return total_dice / len(loader)
 
 
+# ========================
+# WITH SEVERITY
+# ========================
+
 def evaluate_with_severity():
     lung_model = UNet().to(DEVICE)
     infection_model = UNet().to(DEVICE)
 
-    lung_model.load_state_dict(torch.load(f"{CHECKPOINT_DIR}/lung_model.pth", map_location=DEVICE))
-    infection_model.load_state_dict(torch.load(f"{CHECKPOINT_DIR}/infection_model.pth", map_location=DEVICE))
+    load_model(lung_model, f"{CHECKPOINT_DIR}/lung_model.pth")
+    load_model(infection_model, f"{CHECKPOINT_DIR}/infection_model.pth")
 
     lung_model.eval()
     infection_model.eval()
@@ -68,8 +86,12 @@ def evaluate_with_severity():
     return total_severity / len(loader)
 
 
+# ========================
+# MAIN
+# ========================
+
 if __name__ == "__main__":
-    print("Running Ablation Study...\n")
+    print("🚀 Running Ablation Study...\n")
 
     dice_score = evaluate_without_severity()
     severity_score = evaluate_with_severity()

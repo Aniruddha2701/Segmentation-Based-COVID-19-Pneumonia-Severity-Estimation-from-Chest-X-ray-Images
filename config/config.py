@@ -5,21 +5,25 @@ import torch
 # PATHS
 # ========================
 
-# Automatically detect project root
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DATASET_PATH = os.getenv("DATASET_PATH", os.path.join(BASE_DIR, "Dataset"))
+DATASET_PATH = os.getenv(
+    "DATASET_PATH",
+    "/Re-creation/Dataset"
+)
+
+CHECKPOINT_DIR = os.path.join(BASE_DIR, "checkpoints")
 
 # ========================
 # TRAINING
 # ========================
 
 IMG_SIZE = 256
-EPOCHS = 20
-LR = 1e-4
+EPOCHS = 10   # 🔥 allows proper resume + early stopping
+LR = 5e-5
 
-# Dynamic batch size
-BATCH_SIZE = 8 if torch.cuda.is_available() else 2
+# 🔥 safer for infection segmentation
+BATCH_SIZE = 4 if torch.cuda.is_available() else 2
 
 # ========================
 # DEVICE
@@ -28,8 +32,8 @@ BATCH_SIZE = 8 if torch.cuda.is_available() else 2
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ========================
-# SAVE PATHS
+# PERFORMANCE BOOST
 # ========================
 
-CHECKPOINT_DIR = os.path.join(BASE_DIR, "checkpoints")
-MODEL_NAME = "lung_model.pth"
+if torch.cuda.is_available():
+    torch.backends.cudnn.benchmark = True

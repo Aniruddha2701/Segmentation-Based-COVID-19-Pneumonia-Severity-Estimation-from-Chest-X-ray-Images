@@ -10,6 +10,7 @@ from datasets.infection_dataset import InfectionDataset
 from models.unet import UNet
 from config.config import *
 
+torch.backends.cudnn.benchmark = True
 # ========================
 # LOSS
 # ========================
@@ -35,7 +36,7 @@ bce_loss = nn.BCEWithLogitsLoss()
 dice_loss = DiceLoss()
 
 def combined_loss(preds, targets):
-    return bce_loss(preds, targets) + 2 * dice_loss(preds, targets)
+    return bce_loss(preds, targets) + 1.5 * dice_loss(preds, targets)
 
 
 # ========================
@@ -78,7 +79,7 @@ def precision_recall(preds, targets):
 
 train_loader = DataLoader(
     InfectionDataset(DATASET_PATH, split="train"),
-    batch_size=2,  # 🔥 safer for GPU
+    batch_size=BATCH_SIZE,  # 🔥 safer for GPU
     shuffle=True,
     num_workers=2 if DEVICE.type == "cuda" else 0,
     pin_memory=True if DEVICE.type == "cuda" else False
@@ -86,7 +87,7 @@ train_loader = DataLoader(
 
 val_loader = DataLoader(
     InfectionDataset(DATASET_PATH, split="val"),
-    batch_size=2,
+    batch_size=BATCH_SIZE,
     shuffle=False,
     num_workers=2 if DEVICE.type == "cuda" else 0,
     pin_memory=True if DEVICE.type == "cuda" else False
@@ -108,23 +109,25 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
 # RESUME (SAFE)
 # ========================
 
+
+start_epoch = 1
+best_val = float("inf")
+
 checkpoint_path = os.path.join(CHECKPOINT_DIR, "infection_model.pth")
 
-start_epoch = 0
-
 if os.path.exists(checkpoint_path):
-    try:
-        checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
-        
+    checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+
+    if isinstance(checkpoint, dict) and "model" in checkpoint:
         model.load_state_dict(checkpoint["model"])
         optimizer.load_state_dict(checkpoint["optimizer"])
         start_epoch = checkpoint["epoch"] + 1
+        best_val = checkpoint.get("best_val", float("inf"))
 
-        print(f"✅ Resuming training from epoch {start_epoch}")
-
-    except Exception as e:
-        print(f"⚠️ Failed to load checkpoint: {e}")
-        print("Training from scratch...")
+        print(f"✅ Resuming from epoch {start_epoch}")
+    else:
+        model.load_state_dict(checkpoint)
+        print("✅ Loaded weights only (no resume info)")
 
 # ========================
 # TRACKING
@@ -203,16 +206,18 @@ os.makedirs("logs", exist_ok=True)
 
 log_file = "logs/infection_training_log.csv"
 
-with open(log_file, "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Epoch", "TrainLoss", "ValLoss", "Dice", "IoU", "Precision", "Recall"])
-
+if not os.path.exists(log_file):
+    with open(log_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Epoch", "TrainLoss", "ValLoss", "Dice", "IoU", "Precision", "Recall"])
+        
 best_val = float("inf")
 patience = 5
 counter = 0
+TOTAL_EPOCHS = 10
 
-for epoch in range(start_epoch, EPOCHS):
-    print(f"\nEpoch {epoch+1}/{EPOCHS} (starting from {start_epoch+1})")
+for epoch in range(start_epoch,TOTAL_EPOCHS):
+    print(f"\nEpoch {epoch+1}/{EPOCHS} (resume from {start_epoch+1})")
 
     train_loss = train_one_epoch(train_loader)
     val_loss, dice, iou, precision, recall = validate(val_loader)
@@ -240,7 +245,7 @@ for epoch in range(start_epoch, EPOCHS):
     if val_loss < best_val:
         best_val = val_loss
         counter = 0
-        torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(), "epoch": epoch}, checkpoint_path)
+        torch.save({"model": model.state_dict(), "optimizer": optimizer.state_dict(), "epoch": epoch, "best_val": best_val}, checkpoint_path)
         print("✅ Infection model saved!")
     else:
         counter += 1

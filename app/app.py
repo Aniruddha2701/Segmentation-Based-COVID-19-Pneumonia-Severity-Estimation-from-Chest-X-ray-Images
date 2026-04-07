@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import streamlit as st
 import torch
 import numpy as np
@@ -12,6 +17,19 @@ from config.config import *
 
 
 # ========================
+# SAFE LOAD FUNCTION 🔥
+# ========================
+
+def load_model(model, path):
+    checkpoint = torch.load(path, map_location=DEVICE)
+
+    if isinstance(checkpoint, dict) and "model" in checkpoint:
+        model.load_state_dict(checkpoint["model"])
+    else:
+        model.load_state_dict(checkpoint)
+
+
+# ========================
 # LOAD MODELS
 # ========================
 
@@ -20,13 +38,14 @@ def load_models():
     lung_model = UNet().to(DEVICE)
     infection_model = UNet().to(DEVICE)
 
-    lung_model.load_state_dict(torch.load(f"{CHECKPOINT_DIR}/lung_model.pth", map_location=DEVICE))
-    infection_model.load_state_dict(torch.load(f"{CHECKPOINT_DIR}/infection_model.pth", map_location=DEVICE))
+    load_model(lung_model, f"{CHECKPOINT_DIR}/lung_model.pth")
+    load_model(infection_model, f"{CHECKPOINT_DIR}/infection_model.pth")
 
     lung_model.eval()
     infection_model.eval()
 
-    # GradCAM
+    infection_model.requires_grad_(True)
+
     target_layer = infection_model.dec1
     gradcam = GradCAM(infection_model, target_layer)
 
@@ -41,7 +60,18 @@ lung_model, infection_model, gradcam = load_models()
 # ========================
 
 def preprocess(image):
-    image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2GRAY)
+
+    image = np.array(image)
+
+    # 🔥 HANDLE BOTH RGB & GRAYSCALE
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    elif len(image.shape) == 2:
+        pass  # already grayscale
+    else:
+        raise ValueError("Unsupported image format")
+
+    
     image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
     image = image.astype(np.float32) / 255.0
 
@@ -67,8 +97,12 @@ def predict(image):
 
     overlay = overlay_masks(original, lung_mask, infection_mask)
 
-    # 🔥 GradCAM
+    # 🔥 GradCAM FIX
     cam = gradcam.generate(tensor)
+
+    # normalize
+    cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
+
     heatmap = cv2.applyColorMap((cam * 255).astype(np.uint8), cv2.COLORMAP_JET)
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
 
@@ -81,6 +115,8 @@ def predict(image):
 # UI
 # ========================
 
+st.set_page_config(page_title="Pneumonia AI", layout="wide")
+
 st.title("🧠 Pneumonia Severity Analysis + Explainability 🔥")
 
 uploaded_file = st.file_uploader("Upload Chest X-ray", type=["png", "jpg", "jpeg"])
@@ -91,7 +127,8 @@ if uploaded_file:
     st.image(image, caption="Uploaded Image", use_container_width=True)
 
     if st.button("Analyze"):
-        original, overlay, cam_overlay, severity = predict(image)
+        with st.spinner("Analyzing... 🔍"):
+            original, overlay, cam_overlay, severity = predict(image)
 
         st.subheader("🔍 Results")
 
@@ -105,9 +142,7 @@ if uploaded_file:
 
         st.markdown("### 📊 Severity")
 
-        st.write(f"Score: {severity['severity_score']}")
-        st.write(f"Percent: {severity['severity_percent']}%")
-        st.write(f"Category: {severity['category']}")
+        st.metric("Severity %", f"{severity['severity_percent']:.2f}%")
 
         if severity["category"] == "Severe":
             st.error("⚠️ Severe Infection")

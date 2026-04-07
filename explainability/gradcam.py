@@ -40,7 +40,7 @@ class GradCAM:
 
         weights = torch.mean(grads, dim=(1, 2))
 
-        cam = torch.zeros(acts.shape[1:], dtype=torch.float32)
+        cam = torch.zeros(acts.shape[1:], dtype=torch.float32).to(acts.device)
 
         for i, w in enumerate(weights):
             cam += w * acts[i]
