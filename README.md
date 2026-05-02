@@ -53,12 +53,18 @@ This project goes further by introducing a **segmentation-driven pipeline** that
 ## 🧩 System Pipeline
 
 <p align="center">
-  <img src="assets/pipeline.png" width="85%">
+  <img src="assets/pipeline_pro.png" width="85%">
 </p>
 
 ```
 Chest X-ray → Lung Segmentation → Infection Segmentation → Severity Score → Grad-CAM
 ```
+
+## 🏗️ System Architecture 
+
+<p align="center">
+  <img src="assets/system_Architecure.png" width="85%">
+</p>
 
 ---
 
@@ -109,7 +115,7 @@ Severity = Infection Area / Lung Area
 ## 🖼️ Output Visualizations
 
 <p align="center">
-  <img src="assets/output_grid.png" width="85%">
+  <img src="assets/output.png" width="85%">
 </p>
 
 * Lung segmentation
