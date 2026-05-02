@@ -63,7 +63,7 @@ Chest X-ray → Lung Segmentation → Infection Segmentation → Severity Score 
 ## 🏗️ System Architecture 
 
 <p align="center">
-  <img src="assets/system_Architecure.png" width="85%">
+  <img src="assets/system_architecture.png" width="85%">
 </p>
 
 ---
@@ -167,8 +167,8 @@ Severity = Infection Area / Lung Area
 ### 1️⃣ Clone Repository
 
 ```
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone [https://github.com/your-username/your-repo-name.git](https://github.com/Aniruddha2701/Segmentation-Based-COVID-19-Pneumonia-Severity-Estimation-from-Chest-X-ray-Images.git
+cd Segmentation-Based-COVID-19-Pneumonia-Severity-Estimation-from-Chest-X-ray-Images
 ```
 
 ### 2️⃣ Install Dependencies
@@ -219,7 +219,7 @@ python inference.py
 ## 🎥 Demo
 
 <p align="center">
-  <img src="assets/demo.gif" width="80%">
+  <img src="assets/pneumonia_demo.gif" width="80%">
 </p>
 
 ---
