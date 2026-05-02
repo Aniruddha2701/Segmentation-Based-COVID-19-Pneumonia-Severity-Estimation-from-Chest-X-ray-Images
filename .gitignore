@@ -50,9 +50,13 @@ outputs/
 # 🖼️ IMAGES (GENERATED)
 # =========================
 outputs/images/
+# Ignore all PNGs (dataset etc.)
 *.png
 *.jpg
 *.jpeg
+
+# BUT allow assets folder PNGs
+!assets/*.png
 
 # =========================
 # ⚙️ IDE / EDITOR
