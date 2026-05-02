@@ -9,14 +9,11 @@ def compute_severity(lung_mask, infection_mask):
     Computes severity as ratio of infection area to lung area
     """
 
-    # Convert to binary
-    lung = (lung_mask > 0.5).astype(np.uint8)
-    infection = (infection_mask > 0.5).astype(np.uint8)
+    lung_area = np.sum(lung_mask)
+    infection_area = np.sum(infection_mask)
 
-    lung_area = np.sum(lung)
-    infection_area = np.sum(infection)
-
-    if lung_area == 0:
+    # Safety check
+    if lung_area < 10:   # avoid noise / division instability
         return 0.0
 
     severity = infection_area / lung_area

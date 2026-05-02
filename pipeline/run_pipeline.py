@@ -161,11 +161,11 @@ def visualize_results(img, lung, infection, cam, severity_info):
 if __name__ == "__main__":
     test_image = os.path.join(
         DATASET_PATH,
-        "Lung Segmentation Data",
+        "Infection Segmentation Data",
         "test",
         "COVID-19",
         "images",
-        "covid_3.png"
+        "covid_1615.png"
     )
 
     print("\n🧪 Running pipeline...\n")

@@ -1,39 +1,51 @@
-
 # File Tree: Re-creation
 
-**Generated:** 3/29/2026, 7:49:07 PM
+**Generated:** 4/9/2026, 3:40:20 PM
 **Root Path:** `d:\Re-creation`
 
 ```
 ├── 📁 app
+│   ├── 🐍 __init__.py
 │   └── 🐍 app.py
 ├── 📁 config
+│   ├── 🐍 __init__.py
 │   └── 🐍 config.py
 ├── 📁 dataset_analyzer
 │   ├── 🐍 __init__.py
 │   └── 🐍 analyze_dataset.py
 ├── 📁 datasets
 │   ├── 🐍 __init__.py
+│   ├── 📄 ab.txt
 │   ├── 🐍 infection_dataset.py
 │   └── 🐍 lung_dataset.py
 ├── 📁 evaluation
+│   ├── 🐍 __init__.py
 │   ├── 🐍 ablation.py
+│   ├── 🐍 compare_models.py
 │   └── 🐍 evaluate.py
 ├── 📁 explainability
+│   ├── 🐍 __init__.py
 │   └── 🐍 gradcam.py
 ├── 📁 inference
+│   ├── 🐍 __init__.py
 │   └── 🐍 predict_lung.py
 ├── 📁 models
-│   └── 🐍 Unet.py
+│   ├── 🐍 __init__.py
+│   └── 🐍 unet.py
 ├── 📁 pipeline
+│   ├── 🐍 __init__.py
 │   └── 🐍 run_pipeline.py
 ├── 📁 tests
 │   ├── 🐍 __init__.py
 │   └── 🐍 test_dataset.py
 ├── 📁 training
+│   ├── 🐍 __init__.py
+│   ├── 🐍 a.py
 │   ├── 🐍 train_infection.py
 │   └── 🐍 train_lung.py
 ├── 📁 utils
+│   ├── 🐍 __init__.py
+│   ├── 🐍 seve.py
 │   ├── 🐍 severity.py
 │   └── 🐍 visualization.py
 ├── ⚙️ .gitignore
@@ -41,8 +53,10 @@
 ├── 📝 README.md
 ├── 📝 Structure.md
 ├── 📝 Summary of project.md
+├── 📄 command.txt
 ├── 📘 new model design.docx
-└── 📄 requirements.txt
+├── 📄 requirements.txt
+└── 🐍 run_all.py
 ```
 
 ---

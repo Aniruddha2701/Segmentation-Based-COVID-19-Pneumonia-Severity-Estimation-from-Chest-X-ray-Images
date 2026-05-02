@@ -17,6 +17,13 @@ from config.config import *
 
 
 # ========================
+# PAGE CONFIG
+# ========================
+
+st.set_page_config(page_title="Pneumonia AI", layout="wide")
+
+
+# ========================
 # SAFE LOAD FUNCTION 🔥
 # ========================
 
@@ -56,22 +63,29 @@ lung_model, infection_model, gradcam = load_models()
 
 
 # ========================
+# SIDEBAR 🔥
+# ========================
+
+st.sidebar.title("⚙️ Model Info")
+st.sidebar.write("Model: U-Net")
+st.sidebar.write("Task: Pneumonia Severity Analysis")
+st.sidebar.write(f"Device: {DEVICE}")
+
+
+# ========================
 # PREPROCESS
 # ========================
 
 def preprocess(image):
-
     image = np.array(image)
 
-    # 🔥 HANDLE BOTH RGB & GRAYSCALE
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     elif len(image.shape) == 2:
-        pass  # already grayscale
+        pass
     else:
         raise ValueError("Unsupported image format")
 
-    
     image = cv2.resize(image, (IMG_SIZE, IMG_SIZE))
     image = image.astype(np.float32) / 255.0
 
@@ -97,10 +111,8 @@ def predict(image):
 
     overlay = overlay_masks(original, lung_mask, infection_mask)
 
-    # 🔥 GradCAM FIX
+    # Grad-CAM
     cam = gradcam.generate(tensor)
-
-    # normalize
     cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
 
     heatmap = cv2.applyColorMap((cam * 255).astype(np.uint8), cv2.COLORMAP_JET)
@@ -115,9 +127,12 @@ def predict(image):
 # UI
 # ========================
 
-st.set_page_config(page_title="Pneumonia AI", layout="wide")
-
 st.title("🧠 Pneumonia Severity Analysis + Explainability 🔥")
+
+st.info(
+    "This system segments lung and infection regions, then estimates severity "
+    "based on infected lung area."
+)
 
 uploaded_file = st.file_uploader("Upload Chest X-ray", type=["png", "jpg", "jpeg"])
 
@@ -142,11 +157,23 @@ if uploaded_file:
 
         st.markdown("### 📊 Severity")
 
+        # 🔥 METRIC + PROGRESS BAR
         st.metric("Severity %", f"{severity['severity_percent']:.2f}%")
+        st.progress(int(severity["severity_percent"]))
 
+        # 🔥 COLOR FEEDBACK
         if severity["category"] == "Severe":
-            st.error("⚠️ Severe Infection")
+            st.error("🔴 Severe Infection")
         elif severity["category"] == "Moderate":
-            st.warning("⚠️ Moderate Infection")
+            st.warning("🟠 Moderate Infection")
         else:
-            st.success("✅ Mild Infection")
+            st.success("🟢 Mild Infection")
+
+        # 🔥 DOWNLOAD BUTTON
+        _, buffer = cv2.imencode(".png", cam_overlay)
+        st.download_button(
+            label="📥 Download Result",
+            data=buffer.tobytes(),
+            file_name="pneumonia_result.png",
+            mime="image/png"
+        )
